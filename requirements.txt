@@ -8,3 +8,6 @@ torch
 google-cloud-speech
 pymongo
 motor
+dotenv
+pydub
+python-multipart
