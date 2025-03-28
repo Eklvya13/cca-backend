@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+librosa
+pyannote.audio
+transformers
+speechbrain
+torch
+google-cloud-speech
+pymongo
+motor
