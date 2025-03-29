@@ -11,3 +11,4 @@ motor
 dotenv
 pydub
 python-multipart
+pydantic[email]
