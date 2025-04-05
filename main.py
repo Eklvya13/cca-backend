@@ -1,9 +1,22 @@
-from fastapi import FastAPI, UploadFile, Form, File
-from fastapi.responses import HTMLResponse, FileResponse    
+from fastapi import FastAPI, UploadFile, Form, File, BackgroundTasks
+from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 from database import DatabaseManager
+from tasks import start_analysis
+from utils import cors_origins
 
 app = FastAPI()
 db = DatabaseManager()
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_origins,  # Allow only specific origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
+
 
 # Temporary Home Page
 @app.get("/welcome-temp", response_class=HTMLResponse)
@@ -14,42 +27,11 @@ async def home():
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Call Audio Player</title>
+    <title>Aur Laundo</title>
 </head>
 <body>
 
-    <h2>Call Audio Player</h2>
-
-    <label for="callId">Enter Call ID:</label>
-    <input type="number" id="callId" placeholder="Enter Call ID" value="1">
-    <button onclick="fetchAudio()">Get Audio</button>
-
-    <br><br>
-    <audio id="audioPlayer" controls style="display: none;">
-        Your browser does not support the audio element.
-    </audio>
-
-    <script>
-        function fetchAudio() {
-            let callId = document.getElementById("callId").value;
-            let url = `http://127.0.0.1:8000/audio/${callId}`;
-
-            fetch(url)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
-                    }
-                    return response.blob();
-                })
-                .then(blob => {
-                    let audioUrl = URL.createObjectURL(blob);
-                    let audioPlayer = document.getElementById("audioPlayer");
-                    audioPlayer.src = audioUrl;
-                    audioPlayer.style.display = "block"; // Show the player
-                })
-                .catch(error => console.error("Failed to fetch audio:", error));
-        }
-    </script>
+    <a href="/docs"><h2>Here Lies the Docs</h2></a>
 
 </body>
 </html>
@@ -90,7 +72,7 @@ async def edit_employee(
 
 @app.get("/employee/{unique_employee_id}")
 async def search_employee(unique_employee_id: int):
-    employee = await db.search_employee(unique_employee_id)
+    employee = await db.get_employee(unique_employee_id)
     return {"employee": employee}
 
 # ==============================
@@ -102,8 +84,8 @@ async def add_call(
     duration: int = Form(...),
     audio_file: UploadFile = File(...)
 ):
-    call_id, file_id = await db.add_call(unique_employee_id, duration, audio_file.file)
-    return {"call_id": call_id, "file_id": file_id}
+    call_id, filename = await db.add_call(unique_employee_id, duration, audio_file.file)
+    return {"call_id": call_id, "file_id": filename}
 
 
 @app.delete("/admin/call/{call_id}")
@@ -164,10 +146,15 @@ async def delete_analysis(call_id: int):
 # ==============================
 @app.get("/audio/{call_id}")
 async def get_audio(call_id: int):
-    audio_stream = await db.get_audio(call_id)
-    if not audio_stream:
+    file_name= await db.get_audio_url(call_id)
+    if not file_name:
         return {"error": "Audio not found"}
-    return audio_stream
+    return file_name
+
+
+@app.post("/analyze/{call_id}")
+def analyze_call(call_id: int, employee_unique_id: int, background_tasks: BackgroundTasks):
+    return start_analysis(background_tasks, call_id, employee_unique_id)
 
 # ==============================
 # FastAPI Server Run

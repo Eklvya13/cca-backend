@@ -4,7 +4,6 @@ librosa
 pyannote.audio
 transformers
 speechbrain
-torch
 google-cloud-speech
 pymongo
 motor
@@ -12,3 +11,4 @@ dotenv
 pydub
 python-multipart
 pydantic[email]
+google-cloud-storage
