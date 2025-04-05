@@ -99,13 +99,6 @@ cca-backend/
 - **Secured MongoDB**: Use strong credentials and IP whitelisting for MongoDB Atlas.
 - **Environment Variables**: Store sensitive keys in `.env` and avoid committing them to version control.
 
-## Future Improvements
-
-- Add support for more emotion categories.
-- Implement real-time transcription and analysis.
-- Optimize scoring formula for better accuracy.
-- Enhance API documentation with Swagger.
-
 ---
 
 ## Author
