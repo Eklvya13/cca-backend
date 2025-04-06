@@ -62,17 +62,27 @@ uvicorn main:app --reload
 ```
 
 ## Project Structure
+```
+## Project Structure
 
 ```
 cca-backend/
-├── app/
-│   ├── api/                # API routes
-│   ├── models/             # Database models
-│   ├── services/           # Business logic and integrations
-│   ├── utils/              # Utility functions
-│   └── main.py             # Application entry point
-├── tests/                  # Unit and integration tests
+├── assets/                 # Contains audio and transcript files
+│   ├── isolated/           # Processed audio files
+│   ├── recordings/         # Raw audio recordings
+│   └── transcripts/        # Transcription files
+├── pipeline/               # Core processing pipeline
+│   ├── __init__.py         # Package initializer
+│   ├── analyzer.py         # Competence and emotion analysis logic
+│   ├── audio_processor.py  # Audio processing utilities
+│   ├── pipeline.py         # Main pipeline orchestration
+│   ├── prompts.py          # Prompt templates for analysis
+│   └── scorecard.py        # Scoring logic
+├── database.py             # MongoDB + GCS Bucket integration
+├── main.py                 # FastAPI application entry point
 ├── requirements.txt        # Python dependencies
+├── tasks.py                # Background task definitions
+├── utils.py                # Utility functions
 └── README.md               # Project documentation
 ```
 
