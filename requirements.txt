@@ -12,3 +12,4 @@ pydub
 python-multipart
 pydantic[email]
 google-cloud-storage
+google-genai
