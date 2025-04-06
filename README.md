@@ -63,9 +63,6 @@ uvicorn main:app --reload
 
 ## Project Structure
 ```
-## Project Structure
-
-```
 cca-backend/
 ├── assets/                 # Contains audio and transcript files
 │   ├── isolated/           # Processed audio files
