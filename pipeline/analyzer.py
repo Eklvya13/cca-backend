@@ -3,7 +3,7 @@ import torch
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils import POLARITY_MAP, slice_audio, save_scorecard_b_numerics, scorecard_b_numerics_to_text, merged_transcript_to_text
-from pipeline.prompts import Gemini
+from prompts import Gemini
 
 from transformers import Wav2Vec2ForSequenceClassification, Wav2Vec2FeatureExtractor
 
@@ -130,7 +130,8 @@ def generate_scorecard_b_numeric(result, slice_duration=5.0, alpha=0.3):
 
 def run_scorecard_a(transcript, call_id):
     transcript_text = merged_transcript_to_text(transcript)
-    return Gemini().generate_summary_with_data(transcript_text, 'scorecard_a').replace("\n```", "").replace("```json\n", "")
+    summary = Gemini().generate_summary_with_data(transcript_text, 'scorecard_a').replace("\n```", "").replace("```json\n", "")
+    return eval(summary)
 
 def run_scorecard_b_local(call_id):
     audio_path = os.path.join("assets", "isolated", f"{call_id:03d}_isolated.wav")
@@ -160,9 +161,8 @@ def run_scorecard_b_local(call_id):
 
 def analyzer_main(transcript, call_id):
     scorecard_a = run_scorecard_a(transcript, call_id)
-    #scorecard_b = run_scorecard_b_local(call_id)
-    print(scorecard_a)
-    return scorecard_a #, scorecard_b
+    scorecard_b = run_scorecard_b_local(call_id)
+    return scorecard_a, scorecard_b
 
 def compute_final_scorecard_b_score(scorecard_b_numerics, min_val=-0.3, max_val=0.3):
     smoothed_scores = [
