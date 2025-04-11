@@ -3,6 +3,7 @@ import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from pipeline.audio_processor import audio_processor
 from pipeline.analyzer import analyzer_main
+from pipeline.scorecard import report_main
 from utils import save_dics_list_to_json
 
 async def run_pipeline(call_id: str, employee_unique_id: int):
@@ -26,7 +27,7 @@ async def run_pipeline(call_id: str, employee_unique_id: int):
     print(f"Generated scorecards for call {call_id}")
 
     # Step 3: Final Report
-    await asyncio.sleep(5)
+    final_report = report_main(scorecard_a=scorecard_a, scorecard_b=scorecard_b)
     print(f"Finalized report for call {call_id}")
 
     print(f"Analysis complete for call {call_id}")

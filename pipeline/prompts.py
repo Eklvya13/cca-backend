@@ -41,6 +41,102 @@ In addition, extract any number of relevant textual observations that describe n
 
 The output must be in plaintext JSON format only, without markdown, comments, or extra formatting. Each field must be on its own line.
 ''',
+    'report' : '''
+
+You are generating a structured final call analysis report based on two scorecards:  
+(1) Agent competence evaluation (Scorecard A), and  
+(2) Caller emotion trends (Scorecard B).
+
+The report will be rendered as markdown on a webpage, so use standard markdown formatting: **bold**, *italics*, bullet points, tables, and horizontal dividers are allowed — but **only use headings as defined below** and do **not include emojis** inside the report body.
+
+# 📞 Final Call Evaluation Report {#call-evaluation}
+Begin with a **brief introductory paragraph** (3–4 lines max) that summarizes the nature of the call, overall emotional tone, and how the agent handled the interaction. You may mention whether the call seemed smooth or tense, whether the issue was resolved, and how the agent came across (confident, unsure, professional, etc.).
+
+---
+
+## 1. Agent Competence Analysis {#agent-competence}
+
+- Include a **markdown table** summarizing agent scores for the following fields:
+  - `clarity_score`
+  - `knowledge_score`
+  - `empathy_score`
+  - `professionalism_score`
+  - `resolution_handling_score`
+- Each score must be in the 0 to 10 range and accompanied by a short **one-line qualitative feedback** in the adjacent column, explaining the score.
+
+Example format:
+
+| Metric                     | Score | Feedback                                |
+|---------------------------|-------|------------------------------------------|
+| clarity_score             | 8     | Agent explained the issue clearly.       |
+| knowledge_score           | 7     | Demonstrated product understanding.      |
+| ...                       | ...   | ...                                      |
+
+- After the table, provide **3–5 detailed bullet points** analyzing the agent’s performance. Focus on:
+  - Confidence and tone during the call
+  - How well the agent understood the caller’s problem
+  - Clarity and pacing of the explanations
+  - How helpful or proactive the agent seemed
+  - Any visible strengths or weaknesses
+- Feel free to **reasonably fabricate insights** where the transcript is ambiguous. The goal is to give a thorough and believable analysis.
+
+---
+
+## 2. Caller Emotion Summary {#caller-emotion}
+
+- Summarize the emotional progression of the caller using **4–6 bullet points**.
+- Focus on observable *shifts in emotion* throughout the call — for example, from confusion to relief, or calm to irritation.
+- Highlight any *caller behaviors or speech patterns* that help infer these shifts, such as:
+  - *“Caller raised concerns multiple times before accepting the resolution.”*
+  - *“Tone became calmer once the issue was acknowledged by the agent.”*
+
+Avoid referring to silent periods or low-confidence model segments. Prioritize clarity and story-like flow of the emotional progression.
+
+---
+
+## 3. Confidence Meter {#confidence-meter}
+
+- Add a one-line confidence statement at the top of this section, like:
+  - *"Confidence in this report: Medium"*
+
+- Then show a **simple 3-row table** to convey confidence in various data sources:
+
+| Data Source               | Confidence |
+|---------------------------|------------|
+| Agent Competence Analysis | High       |
+| Caller Emotion Tracking   | Medium     |
+| Transcript Quality        | Medium     |
+
+Adjust levels as appropriate. Use only **Low**, **Medium**, or **High**.
+
+---
+
+## 4. Final Evaluation {#final-evaluation}
+
+- State the **final score out of 10**. This is already calculated and given to the model.
+- Add a **summary table or bullet list** of the main sub-scores or breakdown metrics:
+
+Example list:
+- `overall_competence`
+- `emotional_handling`
+- `communication_flow`
+- `resolution_quality`
+
+- After the scores, list any relevant **tags or labels** in a plain line at the bottom
+- Mention any *tags/labels* extracted, e.g. **"confident", "clear", "empathetic", "slow paced"** (if available).
+- Conclude with 3-4 *bullet-point takeaways* summarizing the entire call's quality, tone, and any standout observations.
+
+----
+
+## Formatting Rules {#formatting-rules}
+
+- Use **bold** and *italics* where helpful.
+- Do **not** include markdown inside the data fields.
+- Do **not** include emojis beyond the initial heading.
+- Use bullet points, tables, and line breaks to keep structure clear.
+- The report should be long (1–2 pages), content-rich, and **not directly customer-facing**. 
+
+''',
     'old_scorecard_b' : '''
     You are analyzing a call where the caller’s emotions were detected in 5-second intervals. Each entry includes a start time, end time, the detected emotion label, and a smoothed emotion score (positive, negative, or neutral).
 
@@ -83,6 +179,16 @@ All output should be plain lines, with no markdown, titles, lists, or extra expl
     'scorecard_a' : '''Note: The model used for diarization and transcription may introduce minor alignment or speaker labeling errors. Do not make assumptions about transcription quality or blame the data. Your task is to provide an insightful analysis using the available transcript, even if it appears imperfect.
 
 This is not the final report shown to users, so your output can be dense and technical. However, be clear and well-structured. All six numeric fields must always be included and should be formatted as floats between 0 and 10. The rest of the content (observations) is flexible, and may be inferred from the context if needed. Avoid markdown, emoji, headings, or filler text. The entire output must be a valid JSON object in plaintext. 
+''',
+    'report' : '''
+    You are working with lightly noisy data — diarization and transcription may not be perfect. Do not mention that. Your job is to create a clear, confident, and clean markdown report, as if it was manually written by a human.
+
+You may fabricate minor plausible inferences or clean up gaps in logic, but do not invent full events. Stick to what's reasonable from the input.
+
+Use bullet points, tables, bold, italics, and horizontal dividers only — do not use markdown headings, emojis, or decorative styles. Structure must remain clean and consistent. No filler text like “Here is the report” or “Analysis below”.
+
+Your focus is *clarity*, *readability*, and *insight density*. The report will be shown to users — make it look well-written and useful.
+
 ''',
     'old_scorecard_b' : " Note from devs: the following scorecard data is not the most accurate due to poor model so please dont give output like the data is random, give us a trend either negative or positive, even if you have to lie but dont go overboard and DO NOT mention this. ",
     'old_scorecard_a' : " Follow the prompt carefully."

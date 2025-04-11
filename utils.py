@@ -52,6 +52,14 @@ def scorecard_b_numerics_to_text(scorecard_b_numerics):
         ret += f"{entry['start_time']},{entry['end_time']},{entry['real_emotion']},{entry['absolute_emotion']},{entry['emotion_score_raw']},{entry['emotion_score_smoothed']}\n"
     return ret
 
+def save_markdown(md, file_path):
+    """Save the given markdown text to a .md file."""
+    try:
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(md)
+    except Exception as e:
+        print(f"Error saving markdown file: {e}")
+
 
 def save_scorecard_b_numerics(scorecard, file_path):
     with open(file_path, 'w') as f:
