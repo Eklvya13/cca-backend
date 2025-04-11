@@ -100,10 +100,6 @@ def merge_transcript_by_speaker(transcript_result):
     return merged_transcript
 
 def isolate_speaker_audio(call_id: str, diarization_result: list, save_dir=ISOLATED_DIR):
-    """
-   Keeps only the selected speaker's voice and mutes everything else in a call recording.
-   Returns: Path to the saved isolated audio file.
-    """
     call_id_str = f"{call_id:03}"
 
     # Load the original audio file

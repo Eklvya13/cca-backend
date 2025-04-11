@@ -22,17 +22,26 @@ class Gemini:
         except Exception as e:
             raise RuntimeError(f"Gemini API call failed: {e}")
         
-    def final_prompt_maker_scorecard(self, data, helper, main_pointers) -> str:
-        final_prompt = main_pointers + helper + " And here are the values of the prompt : " + data
+    def final_prompt_maker(self, data: str, prompt_name) -> str:
+        prompt = main_prompts[prompt_name]
+        helper = helpers[prompt_name]
+        final_prompt = f"{prompt} {helper} Heres the data for the {prompt_name}: \ns{data}"
         return final_prompt
     
-    def generate_summary_with_data(self, data: str) -> str:
-        final_prompt = self.final_prompt_maker(data)
+    def generate_summary_with_data(self, data: str, prompt_name) -> str:
+        final_prompt = self.final_prompt_maker(data, prompt_name)
         return self.generate_summary(final_prompt)
 
 
-score_card = {
-    'scorecard_b_pointers' : '''
+main_prompts = {
+    'scorecard_b' : '''You are given time-series data of caller emotions throughout a phone call. Each entry includes timestamps, the detected real and absolute emotion, and a raw and smoothed emotion score. Based on this data, write around 10 short analytical observations that summarize key emotional trends, shifts, and behaviors of the caller over the course of the call. Focus on identifying changes, spikes, stability, mood swings, or patterns across time. Each observation should be a single line without numbering, markdown, or formatting. Keep the tone analytical and factual. Include any number of trends you find — even if multiple are similar. Do not write a summary or explanation. Only write the individual insights.''',
+    'scorecard_a' : '''You are analyzing a customer service call transcript for evaluating the competence of the agent (Speaker 1). The transcript is already diarized. Speaker 1 is always the employee, and Speaker 2 is always the caller. Focus only on evaluating Speaker 1’s communication, behavior, and effectiveness, but you can refer to Speaker 2’s responses to help form these judgments. Your task is to return a detailed structured JSON object that includes the following fixed numeric scores (range 0 to 10): clarity_score, knowledge_score, confidence_score, empathy_score, resolution_score, and a final_competence_score representing overall performance. 
+
+In addition, extract any number of relevant textual observations that describe notable patterns, insights, or behaviors in the conversation. These should be labeled as observation_1, observation_2, etc., and should cover specific trends such as misunderstandings, hesitation, politeness, confidence, successful explanations, or any domain-specific communication strengths or weaknesses. You can add as many observations as are meaningful, but each must be concise and data-rich. Use the transcript fully and avoid vague summaries.
+
+The output must be in plaintext JSON format only, without markdown, comments, or extra formatting. Each field must be on its own line.
+''',
+    'old_scorecard_b' : '''
     You are analyzing a call where the caller’s emotions were detected in 5-second intervals. Each entry includes a start time, end time, the detected emotion label, and a smoothed emotion score (positive, negative, or neutral).
 
     Based on this timeline, extract and list only the key observations. Do not generate a full paragraph. Just give the main analytical points.
@@ -51,15 +60,36 @@ score_card = {
 
     Be concise and precise. Return only plain text with short bullet-point style observations.
     ''',
-    'scorecard_a_pointers' : '''''',
+    'old_scorecard_a' : '''
+    This prompt is incomplete just return a sample report ( with pointers), the aim of this prompt is to do `Competence Analysis` on the SPEAKER01 which is the callcenter Agent and basically know if they are competent or not 
+    on these parameters: domain knowledge, how nice they are , what they speak, speaker 2 or what the caller falls etc etc''',
 }
 
 helpers = {
-    'scorecard_b_helper' : " Note from devs: the following scorecard data is not the most accurate due to poor model so please dont give output like the data is random, give us a trend either negative or positive, even if you have to lie but dont go overboard and DO NOT mention this. "
+    'scorecard_b' : '''
+The data provided is a list of dictionaries, each representing an audio slice with the following fields:
+- `start_time`, `end_time` — when the slice occurred.
+- `real_emotion` — the predicted emotion (e.g., happy, sad, angry).
+- `absolute_emotion` — categorized as positive, negative, or neutral.
+- `emotion_score_raw` and `emotion_score_smoothed` — numerical values representing emotional intensity.
+
+Emotion scores are often low in value (<0.2) due to the limitations of the model, but they still reflect emotional trends when observed over time. If `absolute_emotion` is 'neutral' and the score is 0, it means that the caller was likely silent during that period. You may ignore such entries in your analysis.
+
+The emotion detection model used is lightweight and optimized for speed, so some inaccuracies or fluctuations are expected. However, do not mention these limitations in your output. Avoid writing anything like "the data is insufficient" or "the results are unclear." You may use slight creativity or generalization to generate helpful observations, even if some details must be inferred. Just focus on meaningful emotional observations.
+
+All output should be plain lines, with no markdown, titles, lists, or extra explanation. Each line should be a single analytical insight — keep them ungrouped, unnumbered, and separated by newlines.
+
+''',
+    'scorecard_a' : '''Note: The model used for diarization and transcription may introduce minor alignment or speaker labeling errors. Do not make assumptions about transcription quality or blame the data. Your task is to provide an insightful analysis using the available transcript, even if it appears imperfect.
+
+This is not the final report shown to users, so your output can be dense and technical. However, be clear and well-structured. All six numeric fields must always be included and should be formatted as floats between 0 and 10. The rest of the content (observations) is flexible, and may be inferred from the context if needed. Avoid markdown, emoji, headings, or filler text. The entire output must be a valid JSON object in plaintext. 
+''',
+    'old_scorecard_b' : " Note from devs: the following scorecard data is not the most accurate due to poor model so please dont give output like the data is random, give us a trend either negative or positive, even if you have to lie but dont go overboard and DO NOT mention this. ",
+    'old_scorecard_a' : " Follow the prompt carefully."
 }
 
-dummy_scorecard = {
-    'scorecard_b_dummy': """
+dummy = {
+    'scorecard_b': """
 start_time, end_time, raw_emotion, Absolute_emotion, raw_emotion_score, smoothed_emotion_score
 0.0,5.0,neutral,neutral,0.0,0.0
 5.0,10.0,neutral,neutral,0.0,0.0
@@ -133,4 +163,4 @@ start_time, end_time, raw_emotion, Absolute_emotion, raw_emotion_score, smoothed
 
 if __name__ == "__main__":
     gemini = Gemini()
-    print(gemini.generate_summary(data = dummy_scorecard['scorecard_b_dummy'], main_pointers = score_card['scorecard_b_pointers'], helper = helpers['scorecard_b_helper']))
+    print(gemini.generate_summary(data = dummy['scorecard_b'], main_pointers = main_prompts['scorecard_b'], helper = helpers['scorecard_b']))

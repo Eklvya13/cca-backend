@@ -1,4 +1,5 @@
 import json
+import numpy as np
 from pathlib import Path
 
 ASSET_DIR = Path(__file__).resolve().parent / "assets"
@@ -9,6 +10,66 @@ cors_origins = [
     "http://127.0.0.1:3000",  # Alternative localhost
      # (Add your production frontend domain here)
 ]
+
+
+# Emotion polarity mapping
+POLARITY_MAP = {
+    "angry": "negative",
+    "disgust": "negative",
+    "fear": "negative",
+    "sad": "negative",
+    "happy": "positive",
+    "surprise": "positive",
+    "neutral": "neutral",
+}
+
+def slice_audio(audio, sr, slice_duration, rms_threshold):
+    slice_samples = int(slice_duration * sr)
+    total_samples = len(audio)
+    slices = []
+
+    for start in range(0, total_samples, slice_samples):
+        end = min(start + slice_samples, total_samples)
+        audio_slice = audio[start:end]
+
+        rms = np.sqrt(np.mean(audio_slice ** 2))
+        is_silent = rms < rms_threshold
+
+        if not is_silent:
+            slices.append({
+                "start_time": round(start / sr, 2),
+                "end_time": round(end / sr, 2),
+                "audio_slice": audio_slice
+            })
+
+    return slices
+
+
+def scorecard_b_numerics_to_text(scorecard_b_numerics):
+    ret = ""
+    ret += "start_time,end_time,raw_emotion,absolute_emotion,raw_emotion_score,smoothed_emotion_score\n"
+    for entry in scorecard_b_numerics:
+        ret += f"{entry['start_time']},{entry['end_time']},{entry['real_emotion']},{entry['absolute_emotion']},{entry['emotion_score_raw']},{entry['emotion_score_smoothed']}\n"
+    return ret
+
+
+def save_scorecard_b_numerics(scorecard, file_path):
+    with open(file_path, 'w') as f:
+        for entry in scorecard:
+            f.write(f"{entry['start_time']},{entry['end_time']},{entry['real_emotion']},"
+                    f"{entry['absolute_emotion']},{entry['emotion_score_raw']},"
+                    f"{entry['emotion_score_smoothed']}\n")
+
+
+def merged_transcript_to_text(merged_transcripts):
+    transcript_text = ''
+    for entry in merged_transcripts:
+        if all(key in entry for key in ['speaker', 'sentence', 'start_time', 'end_time']):
+            line = f"{entry['speaker']}: {entry['sentence']} (Start: {entry['start_time']}, End: {entry['end_time']})\n"
+            transcript_text += line
+        else:
+            print(f"Missing keys in entry: {entry}")
+    return transcript_text
 
 def save_dics_list_to_json(dict_list, call_id):
     """Save a list of dictionaries to a JSON file."""
