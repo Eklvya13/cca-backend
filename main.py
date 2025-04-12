@@ -234,12 +234,12 @@ async def get_analysis_by_call_id(call_id: int):
         "transcript": analysis.get("transcript", ""),
         "link": audio_url,
         "scorecard_B": {
-            "score": analysis.get("scorecard_B", {}).get("score", 0),
-            "numerics": analysis.get("scorecard_B", {}).get("numerics", [])
+            "score": analysis.get("scorecard_b", {}).get("score", 0),
+            "numerics": analysis.get("scorecard_b", {}).get("numerics", [])
         },
         "scorecard_A": {
-            "score": analysis.get("scorecard_A", {}).get("score", 0),
-            "individual_parameters": analysis.get("scorecard_A", {}).get("individual_parameters", {})
+            "score": analysis.get("scorecard_a", {}).get("score", 0),
+            "individual_parameters": analysis.get("scorecard_a", {}).get("parameters", {})
         },
         "final_markdown": analysis.get("final_markdown", "")
     }
