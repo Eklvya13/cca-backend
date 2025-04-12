@@ -1,4 +1,4 @@
-from prompts import Gemini
+from pipeline.prompts import Gemini
 import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils import save_markdown

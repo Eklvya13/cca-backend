@@ -3,7 +3,7 @@ import torch
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils import POLARITY_MAP, slice_audio, save_scorecard_b_numerics, scorecard_b_numerics_to_text, merged_transcript_to_text
-from prompts import Gemini
+from pipeline.prompts import Gemini
 
 from transformers import Wav2Vec2ForSequenceClassification, Wav2Vec2FeatureExtractor
 

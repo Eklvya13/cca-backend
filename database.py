@@ -5,7 +5,6 @@ from google.cloud import storage
 import os
 from datetime import datetime, timedelta
 import asyncio
-from tasks import start_analysis
 from utils import convert_to_mono
 
 load_dotenv()
@@ -85,7 +84,6 @@ class DatabaseManager:
                 {"$set": update_data}
             )
         return True
-        return await self.get_employee(unique_employee_id)
 
     #calls collection methods here
     async def add_call(self, employee_unique_id, duration, audio_file):
@@ -109,7 +107,10 @@ class DatabaseManager:
         filepath = f"./assets/recordings/{call_id_str}.wav"
         filename = f"calls/{employee_unique_id}_{call_id_str}.wav"
 
-        await gcs.upload_audio( file_path=filepath, filename=filename)
+        try:
+            await gcs.upload_audio(file_path=filepath, filename=filename)
+        except Exception as e:
+            raise RuntimeError(f"GCS upload failed: {str(e)}")
 
         call = {
             "call_id": call_id,
@@ -201,6 +202,57 @@ class DatabaseManager:
                 {"$set": update_data}
             )
         return True
+    
+    async def get_employee_summary(self, employee_id: str):
+        calls_cursor = self.db.calls.find({"employee_unique_id": int(employee_id)})
+        calls = await calls_cursor.to_list(length=None)
+
+        if not calls:
+            return None
+
+        total_calls = len(calls)
+        durations = [call.get("duration", 0) for call in calls]
+        scores = [call.get("numerical_score", 0) or 0 for call in calls]
+
+        avg_duration = round(sum(durations) / total_calls, 2)
+        avg_score = round(sum(scores) / total_calls, 2)
+
+        def simulate_emotion(score):
+            if score >= 75:
+                return "positive"
+            elif score >= 50:
+                return "neutral"
+            return "negative"
+
+        emotion_counts = {"positive": 0, "neutral": 0, "negative": 0}
+        for score in scores:
+            mood = simulate_emotion(score)
+            emotion_counts[mood] += 1
+
+        emotion_distribution = {
+            k: round((v / total_calls) * 100, 2) for k, v in emotion_counts.items()
+        }
+
+        calls_list = [
+            {
+                "call_id": call["call_id"],
+                "employee_id": call["employee_unique_id"],
+                "call_duration": call.get("duration", 0),
+                "numerical_score": call.get("numerical_score", 0),
+                "is_analyzed": call.get("isAnalysed", False),
+                "audio_filename": call.get("audio_filename", "")
+            }
+            for call in calls
+        ]
+
+        return {
+            "employee_id": employee_id,
+            "total_calls": total_calls,
+            "average_duration": avg_duration,
+            "average_score": avg_score,
+            "emotion_distribution": emotion_distribution,
+            "calls": calls_list
+        }
 
     async def delete_analysis(self, call_id):
         """Deletes an analysis entry and associated GCS file."""
@@ -215,6 +267,14 @@ class DatabaseManager:
         await self.db.analysis_results.delete_one({"call_id": call_id})
         return True
 
+
+_db_instance = None
+
+def get_db():
+    global _db_instance
+    if _db_instance is None:
+        _db_instance = DatabaseManager()
+    return _db_instance
 
 async def test_db1():
     db = DatabaseManager()
